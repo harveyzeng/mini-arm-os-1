@@ -94,17 +94,24 @@ extern int fibonacci(int x);
 void fibonacci_thread(void *parameter)
 {			
 			char fib_result_char[10];
+			print_str("\n");
 			print_str("execute fibonacci thread");
+			print_str("\n");
 			int fib_result = fibonacci(str2int(parameter));
 			int2char(fib_result, fib_result_char);
 			print_str(fib_result_char);
 			print_str("\n");
 			print_str("kill fibonacci thread");
+			print_str("\n");
 			thread_self_terminal();
 
 
 }
-
+void ps_thread(void *parameter)
+{			
+			ps_function();
+			thread_self_terminal();
+}
 
 /*
 int fibonacci(int x){
@@ -190,9 +197,14 @@ void shell(void *userdata)
 					print_str("\n");
 				}
 				else{
-					if (thread_create(fibonacci_thread, (void *) command[1]) == -1)
+					if (thread_create(fibonacci_thread, (void *) command[1],3,"fibonacci") == -1)
 					print_str("fibonacci creation failed\r\n");
 				}
+			}
+			else if(strcmp(command[0], "ps\0")){
+				if (thread_create(ps_thread, (void *) command[1],7,"ps") == -1)
+					print_str("ps creation failed\r\n");
+
 			}
 			
 		}
@@ -214,7 +226,7 @@ int main(void)
 
 	usart_init();
 
-	if (thread_create(shell, (void *) str1) == -1)
+	if (thread_create(shell, (void *) str1,4,"shell") == -1)
 		print_str("Shell creation failed\r\n");
 
 	/* SysTick configuration */

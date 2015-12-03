@@ -11,11 +11,14 @@ typedef struct {
 	void *stack;
 	void *orig_stack;
 	uint8_t in_use;
+	int priority;
+	char *name;
 } tcb_t;
 
 static tcb_t tasks[MAX_TASKS];
 static int lastTask;
 static int first = 1;
+static int total_task=0;
 
 /* FIXME: Without naked attribute, GCC will corrupt r7 which is used for stack
  * pointer. If so, after restoring the tasks' context, we will get wrong stack
@@ -73,7 +76,7 @@ void thread_start()
 	             "bx lr\n");
 }
 
-int thread_create(void (*run)(void *), void *userdata)
+int thread_create(void (*run)(void *), void *userdata, int priority,char *name)
 {
 	/* Find a free thing */
 	int threadId = 0;
@@ -108,8 +111,10 @@ int thread_create(void (*run)(void *), void *userdata)
 
 	/* Construct the control block */
 	tasks[threadId].stack = stack;
+	tasks[threadId].priority = priority;
 	tasks[threadId].in_use = 1;
-
+	tasks[threadId].name = name;
+	total_task++;
 	return threadId;
 }
 
@@ -129,7 +134,28 @@ void thread_self_terminal()
 	asm volatile("cpsid i\n");
 	thread_kill(lastTask);
 	asm volatile("cpsie i\n");
-
+	total_task--;
 	/* And now wait for death to kick in */
 	while (1);
+}
+
+void ps_function()
+{
+	int task_number_pointer=0;
+	char task_priority[10];
+	print_str("\n");
+	print_str("name   ");
+	print_str("priority   ");
+	for(task_number_pointer=0;task_number_pointer<total_task;task_number_pointer++)
+	{
+		print_str("\n");
+		if (tasks[task_number_pointer].in_use) {
+			print_str(tasks[task_number_pointer].name);
+			print_str(" ");
+			int2char(tasks[task_number_pointer].priority, task_priority);
+			print_str(task_priority);
+			print_str(" ");			
+		}	
+	}
+
 }
